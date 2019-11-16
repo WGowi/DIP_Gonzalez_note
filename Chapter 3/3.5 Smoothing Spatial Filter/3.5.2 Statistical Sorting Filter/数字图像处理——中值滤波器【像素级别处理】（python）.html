@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数字图像处理——中值滤波器【像素级别处理】（python）</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h1><a id="python_0"></a>数字图像处理——中值滤波器【像素级别处理】（python）</h1>
+<p></p><div class="toc"><h3>文章目录</h3><ul><li><a href="#python_0">数字图像处理——中值滤波器【像素级别处理】（python）</a></li><li><a href="#_3">简介</a></li><li><a href="#_8">代码实现</a></li></ul></div><p></p>
+<h1><a id="_3"></a>简介</h1>
+<p>中值滤波（统计排序滤波器）是一种非线性数字滤波器技术，经常用于去除图像或者其它信号中的噪声。这个设计思想就是检查输入信号中的采样并判断它是否代表了信号，使用奇数个采样组成的观察窗实现这项功能。观察窗口中的数值进行排序，位于观察窗中间的中值作为输出。然后，丢弃最早的值，取得新的采样，重复上面的计算过程。</p>
+<p>其中中值滤波对椒盐噪声处理非常好</p>
+<h1><a id="_8"></a>代码实现</h1>
+<p>输入：<br>
+<img src="https://img-blog.csdnimg.cn/20191114230709453.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzMzA5Mjg2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<pre><code class="prism language-py"><span class="token keyword">import</span> cv2
+<span class="token keyword">import</span> datetime
+<span class="token keyword">import</span> numpy <span class="token keyword">as</span> np
+<span class="token keyword">import</span> matplotlib<span class="token punctuation">.</span>pyplot <span class="token keyword">as</span> plt
+
+img <span class="token operator">=</span> cv2<span class="token punctuation">.</span>imread<span class="token punctuation">(</span><span class="token string">'Fig0335.tif'</span><span class="token punctuation">)</span>  <span class="token comment"># 测试图片</span>
+H <span class="token operator">=</span> img<span class="token punctuation">.</span>shape<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span>
+W <span class="token operator">=</span> img<span class="token punctuation">.</span>shape<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
+
+img3 <span class="token operator">=</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span><span class="token punctuation">(</span>H<span class="token punctuation">,</span> W<span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">,</span> np<span class="token punctuation">.</span>uint8<span class="token punctuation">)</span>  <span class="token comment"># 3*3邻域平滑后的图像</span>
+imgmid <span class="token operator">=</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span><span class="token punctuation">(</span>H<span class="token punctuation">,</span> W<span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">,</span> np<span class="token punctuation">.</span>uint8<span class="token punctuation">)</span>  <span class="token comment"># 3*3邻域内取中值的图像</span>
+
+tmpImg <span class="token operator">=</span> np<span class="token punctuation">.</span>zeros<span class="token punctuation">(</span><span class="token punctuation">(</span>H <span class="token operator">+</span> <span class="token number">2</span><span class="token punctuation">,</span> W <span class="token operator">+</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">,</span> np<span class="token punctuation">.</span>uint8<span class="token punctuation">)</span>  <span class="token comment"># 扩充之后的图像</span>
+<span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>H<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">for</span> j <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>W<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        tmpImg<span class="token punctuation">[</span>i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">,</span> j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">=</span> img<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">]</span>
+
+starttime <span class="token operator">=</span> datetime<span class="token punctuation">.</span>datetime<span class="token punctuation">.</span>now<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>H<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">for</span> j <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>W<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        S <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+        <span class="token keyword">for</span> x <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token keyword">for</span> y <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+                <span class="token comment"># S[x * 3 + y] = tmpImg[i + x, j + y, 0]</span>
+                S<span class="token punctuation">.</span>append<span class="token punctuation">(</span>tmpImg<span class="token punctuation">[</span>i <span class="token operator">+</span> x<span class="token punctuation">,</span> j <span class="token operator">+</span> y<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+        img3<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token builtin">sum</span><span class="token punctuation">(</span>S<span class="token punctuation">)</span> <span class="token operator">//</span> <span class="token number">9</span>
+        img3<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">=</span> img3<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span>
+        img3<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span> <span class="token operator">=</span> img3<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span>
+        <span class="token comment"># 冒泡排序，只要排到中间一个值，即4，因此x范围是8-&gt;3</span>
+        <span class="token comment"># for x in range(8, 3, -1):</span>
+        <span class="token comment">#     for y in range(x):</span>
+        <span class="token comment">#         if S[y + 1] &gt; S[y]:</span>
+        <span class="token comment">#             temp = S[y]</span>
+        <span class="token comment">#             S[y] = S[y + 1]</span>
+        <span class="token comment">#             S[y + 1] = temp</span>
+        <span class="token comment"># 自带的排序，timesort，经过测试，这个比冒泡排序要快60%</span>
+        S<span class="token punctuation">.</span>sort<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>S<span class="token punctuation">)</span>
+        imgmid<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span> <span class="token operator">=</span> S<span class="token punctuation">[</span><span class="token number">4</span><span class="token punctuation">]</span>
+        imgmid<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">=</span> imgmid<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span>
+        imgmid<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">]</span> <span class="token operator">=</span> imgmid<span class="token punctuation">[</span>i<span class="token punctuation">,</span> j<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">]</span>
+
+endtime <span class="token operator">=</span> datetime<span class="token punctuation">.</span>datetime<span class="token punctuation">.</span>now<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>endtime <span class="token operator">-</span> starttime<span class="token punctuation">)</span>
+
+<span class="token comment"># 原图</span>
+plt<span class="token punctuation">.</span>subplot<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>axis<span class="token punctuation">(</span><span class="token string">'off'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>title<span class="token punctuation">(</span><span class="token string">'Original image'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>imshow<span class="token punctuation">(</span>img<span class="token punctuation">)</span>
+
+<span class="token comment"># 3*3邻域</span>
+plt<span class="token punctuation">.</span>subplot<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>axis<span class="token punctuation">(</span><span class="token string">'off'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>title<span class="token punctuation">(</span><span class="token string">'3*3 smoothing'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>imshow<span class="token punctuation">(</span>img3<span class="token punctuation">)</span>
+
+<span class="token comment"># 邻域中值替换之后</span>
+plt<span class="token punctuation">.</span>subplot<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>axis<span class="token punctuation">(</span><span class="token string">'off'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>title<span class="token punctuation">(</span><span class="token string">'Middle Value Replaced Image'</span><span class="token punctuation">)</span>
+plt<span class="token punctuation">.</span>imshow<span class="token punctuation">(</span>imgmid<span class="token punctuation">)</span>
+
+plt<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+</code></pre>
+<p>输出：<br>
+<img src="https://img-blog.csdnimg.cn/20191114230557129.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzMzA5Mjg2,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+</div>
+</body>
+
+</html>
